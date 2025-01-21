@@ -1,61 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TicketCard from "../components/TicketCard";
 import { Plus, Search } from "lucide-react";
-
-// Mock data for initial development
-const mockTickets = [
-  {
-    id: "TKT-001",
-    title: "Cannot access email account",
-    status: "open",
-    priority: "high",
-    customer: "John Doe",
-    assignee: "Sarah Tech",
-    createdAt: "2024-02-20T10:00:00Z",
-  },
-  {
-    id: "TKT-002",
-    title: "Printer not responding",
-    status: "in_progress",
-    priority: "medium",
-    customer: "Jane Smith",
-    assignee: "Mike Support",
-    createdAt: "2024-02-19T15:30:00Z",
-  },
-  {
-    id: "TKT-003",
-    title: "Software license expired",
-    status: "resolved",
-    priority: "low",
-    customer: "Bob Wilson",
-    assignee: "Lisa Admin",
-    createdAt: "2024-02-18T09:15:00Z",
-  },
-];
+import { getTickets, createTicket } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
 
 const Tickets = () => {
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredTickets = mockTickets.filter((ticket) => {
+  useEffect(() => {
+    loadTickets();
+  }, [statusFilter, priorityFilter]);
+
+  const loadTickets = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getTickets({
+        status: statusFilter === 'all' ? null : statusFilter,
+        priority: priorityFilter === 'all' ? null : priorityFilter,
+        search: searchQuery
+      });
+      setTickets(data);
+    } catch (err) {
+      console.error('Error loading tickets:', err);
+      setError('Failed to load tickets');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateTicket = async () => {
+    try {
+      const newTicket = await createTicket({
+        title: "Test Ticket",
+        description: "This is a test ticket",
+        priority: "medium",
+        customer_id: user.id
+      });
+      setTickets(prev => [newTicket, ...prev]);
+    } catch (err) {
+      console.error('Error creating ticket:', err);
+      setError('Failed to create ticket');
+    }
+  };
+
+  const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch = ticket.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || ticket.status === statusFilter;
-    const matchesPriority =
-      priorityFilter === "all" || ticket.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch;
   });
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="card text-center py-8 text-red-500">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
       <div className="page-header">
         <h1 className="page-title">Tickets</h1>
-        <button className="button button-primary">
+        <button 
+          className="button button-primary"
+          onClick={handleCreateTicket}
+        >
           <Plus size={16} />
           New Ticket
         </button>
@@ -104,20 +124,25 @@ const Tickets = () => {
               <div className="select-item" onClick={() => { setPriorityFilter('low'); setIsPriorityOpen(false); }}>Low</div>
               <div className="select-item" onClick={() => { setPriorityFilter('medium'); setIsPriorityOpen(false); }}>Medium</div>
               <div className="select-item" onClick={() => { setPriorityFilter('high'); setIsPriorityOpen(false); }}>High</div>
-              <div className="select-item" onClick={() => { setPriorityFilter('critical'); setIsPriorityOpen(false); }}>Critical</div>
+              <div className="select-item" onClick={() => { setPriorityFilter('urgent'); setIsPriorityOpen(false); }}>Urgent</div>
             </div>
           )}
         </div>
       </div>
 
       <div className="space-y-4">
-        {filteredTickets.map((ticket) => (
-          <TicketCard key={ticket.id} {...ticket} />
-        ))}
-        {filteredTickets.length === 0 && (
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-500">
+            Loading tickets...
+          </div>
+        ) : filteredTickets.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             No tickets found matching your filters.
           </div>
+        ) : (
+          filteredTickets.map((ticket) => (
+            <TicketCard key={ticket.id} {...ticket} />
+          ))
         )}
       </div>
     </div>

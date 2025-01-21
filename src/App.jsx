@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard'
 import Queue from './pages/agent/Queue'
 import SubmitTicket from './pages/customer/SubmitTicket'
 import Settings from './pages/Settings'
+import Customers from './pages/Customers'
+import Tickets from './pages/Tickets'
 
 const App = () => {
   return (
@@ -60,6 +62,30 @@ const App = () => {
             <ProtectedRoute>
               <Layout>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Tickets Route */}
+        <Route
+          path="/tickets"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Tickets />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Customers Route */}
+        <Route
+          path="/customers"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Customers />
               </Layout>
             </ProtectedRoute>
           }

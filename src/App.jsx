@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/Layout'
 
 // Pages
 import Login from './pages/auth/Login'
@@ -23,7 +24,9 @@ const App = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -31,7 +34,9 @@ const App = () => {
           path="/submit-ticket"
           element={
             <ProtectedRoute>
-              <SubmitTicket />
+              <Layout>
+                <SubmitTicket />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -41,7 +46,9 @@ const App = () => {
           path="/queue"
           element={
             <ProtectedRoute requiredRole="agent">
-              <Queue />
+              <Layout>
+                <Queue />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -51,7 +58,9 @@ const App = () => {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings />
+              <Layout>
+                <Settings />
+              </Layout>
             </ProtectedRoute>
           }
         />

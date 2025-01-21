@@ -28,35 +28,31 @@ const Sidebar = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold">AutoCRM</h1>
       </div>
-      <div className="flex flex-col" style={{ height: 'calc(100% - 80px)' }}>
-        <nav className="flex flex-col gap-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`sidebar-link ${
-                  location.pathname === item.path ? "sidebar-link-active" : ""
-                }`}
-              >
-                <Icon size={20} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-auto pt-4">
-          <button
-            onClick={handleLogout}
-            className="sidebar-link flex items-center gap-3 text-red-300 hover:bg-red-500/10"
-            style={{ opacity: 1, padding: '10px 12px' }}
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </div>
+      <nav className="flex flex-col gap-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`sidebar-link ${
+                location.pathname === item.path ? "sidebar-link-active" : ""
+              }`}
+            >
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={handleLogout}
+          className="sidebar-link text-white hover:bg-white/10"
+          style={{ marginTop: 'auto' }}
+        >
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </nav>
     </div>
   );
 };

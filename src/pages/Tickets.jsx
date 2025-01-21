@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TicketCard from "../components/TicketCard";
 import { Plus, Search } from "lucide-react";
-import { getTickets, createTicket } from "../lib/supabase";
+import { getTickets, createTicket, checkSupabaseConnection } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 
 const Tickets = () => {
@@ -16,53 +16,103 @@ const Tickets = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadTickets();
-  }, [statusFilter, priorityFilter]);
+    const initializeAndLoad = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Check if user is authenticated
+        if (!user) {
+          setError('Please sign in to view tickets');
+          return;
+        }
 
-  const loadTickets = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getTickets({
-        status: statusFilter === 'all' ? null : statusFilter,
-        priority: priorityFilter === 'all' ? null : priorityFilter,
-        search: searchQuery
-      });
-      setTickets(data);
-    } catch (err) {
-      console.error('Error loading tickets:', err);
-      setError('Failed to load tickets');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Check Supabase connection
+        const isConnected = await checkSupabaseConnection();
+        if (!isConnected) {
+          setError('Unable to connect to the database. Please check your connection.');
+          return;
+        }
+
+        // Load tickets
+        const data = await getTickets({
+          status: statusFilter === 'all' ? null : statusFilter,
+          priority: priorityFilter === 'all' ? null : priorityFilter,
+          search: searchQuery
+        });
+        setTickets(data);
+      } catch (err) {
+        console.error('Error loading tickets:', err);
+        setError('Failed to load tickets. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAndLoad();
+  }, [statusFilter, priorityFilter, searchQuery, user]);
 
   const handleCreateTicket = async () => {
     try {
       const newTicket = await createTicket({
-        title: "Test Ticket",
-        description: "This is a test ticket",
+        title: "New Support Ticket",
+        description: "Please describe your issue...",
         priority: "medium",
         customer_id: user.id
       });
       setTickets(prev => [newTicket, ...prev]);
     } catch (err) {
       console.error('Error creating ticket:', err);
-      setError('Failed to create ticket');
+      setError('Failed to create ticket. Please try again later.');
     }
   };
-
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch = ticket.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
 
   if (error) {
     return (
       <div className="container">
         <div className="card text-center py-8 text-red-500">
-          {error}
+          <p>{error}</p>
+          <button 
+            onClick={() => {
+              const initializeAndLoad = async () => {
+                try {
+                  setIsLoading(true);
+                  setError(null);
+                  
+                  // Check if user is authenticated
+                  if (!user) {
+                    setError('Please sign in to view tickets');
+                    return;
+                  }
+
+                  // Check Supabase connection
+                  const isConnected = await checkSupabaseConnection();
+                  if (!isConnected) {
+                    setError('Unable to connect to the database. Please check your connection.');
+                    return;
+                  }
+
+                  // Load tickets
+                  const data = await getTickets({
+                    status: statusFilter === 'all' ? null : statusFilter,
+                    priority: priorityFilter === 'all' ? null : priorityFilter,
+                    search: searchQuery
+                  });
+                  setTickets(data);
+                } catch (err) {
+                  console.error('Error loading tickets:', err);
+                  setError('Failed to load tickets. Please try again later.');
+                } finally {
+                  setIsLoading(false);
+                }
+              };
+
+              initializeAndLoad();
+            }} 
+            className="button button-secondary mt-4"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -132,15 +182,15 @@ const Tickets = () => {
 
       <div className="space-y-4">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="card text-center py-8 text-gray-500">
             Loading tickets...
           </div>
-        ) : filteredTickets.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+        ) : tickets.length === 0 ? (
+          <div className="card text-center py-8 text-gray-500">
             No tickets found matching your filters.
           </div>
         ) : (
-          filteredTickets.map((ticket) => (
+          tickets.map((ticket) => (
             <TicketCard key={ticket.id} {...ticket} />
           ))
         )}

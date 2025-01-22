@@ -1,0 +1,128 @@
+.dashboardContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.primaryButton {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: #0F766E;
+  color: white;
+  text-align: center;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #0D9488;
+}
+
+.secondaryButton {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  color: #0F766E;
+  text-align: center;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid #0F766E;
+  transition: all 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #F0FDFA;
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  color: #0F766E;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.linkButton:hover {
+  color: #0D9488;
+  text-decoration: underline;
+}
+
+.text {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+/* Quick Actions Card specific styles */
+.card:first-child {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+}
+
+.card:first-child .cardTitle {
+  color: white;
+}
+
+.card:first-child .secondaryButton {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.card:first-child .secondaryButton:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+} 

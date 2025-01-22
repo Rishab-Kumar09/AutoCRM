@@ -1,24 +1,33 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import CreateTicket from "./pages/tickets/CreateTicket";
+import Tickets from "./pages/tickets/Tickets";
+import Layout from "./components/Layout";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/tickets" element={<Index />} />
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AuthProvider>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={<Layout><Index /></Layout>} />
+        <Route path="/tickets" element={<Layout><Tickets /></Layout>} />
+        <Route path="/tickets/create" element={<Layout><CreateTicket /></Layout>} />
+        <Route path="/customers" element={<Layout><Customers /></Layout>} />
+        <Route path="/settings" element={<Layout><Settings /></Layout>} />
+
+        {/* Redirect to login if no match */}
+        <Route path="*" element={<Navigate to="/auth/login" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 };
 

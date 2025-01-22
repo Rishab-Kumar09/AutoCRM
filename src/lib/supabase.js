@@ -11,6 +11,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Please set your Supabase environment variables in .env');
 }
 
+// Custom fetch implementation
+const customFetch = (...args) => {
+  return fetch(...args).then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  });
+};
+
 console.log('Initializing Supabase client with URL:', supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -18,6 +28,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  global: {
+    fetch: customFetch,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   }
 });
 
@@ -38,27 +54,15 @@ export const checkSupabaseConnection = async () => {
       throw new Error('No active session');
     }
 
-    // First check if we can access the users table
-    const { data: userData, error: userError } = await supabase
-      .from('auth.users')
-      .select('raw_user_meta_data->role')
-      .eq('id', session.user.id)
-      .single();
-
-    if (userError) {
-      console.error('Error checking user role:', userError);
-      throw userError;
-    }
-
-    // Then try to access tickets
-    const { data: ticketData, error: ticketError } = await supabase
+    // Test database connection
+    const { data, error } = await supabase
       .from('tickets')
       .select('id')
       .limit(1);
 
-    if (ticketError) {
-      console.error('Error checking tickets access:', ticketError);
-      throw ticketError;
+    if (error) {
+      console.error('Database connection error:', error);
+      throw error;
     }
 
     console.log('Supabase connection successful');
@@ -121,29 +125,12 @@ export async function getTickets({ status, priority, search } = {}) {
  * @param {string} ticket.customer_id - Customer ID
  * @returns {Promise<import('../types/tickets').Ticket>}
  */
-export async function createTicket({ title, description, priority, customer_id }) {
+export async function createTicket(ticketData) {
   try {
-    // Generate ticket number (format: TKT-YYYY-XXXX)
-    const year = new Date().getFullYear();
-    const { count } = await supabase
+    // First, perform the insert
+    const { data: insertedTicket, error: insertError } = await supabase
       .from('tickets')
-      .select('*', { count: 'exact', head: true });
-    
-    const ticketNumber = `TKT-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
-
-    const { data, error } = await supabase
-      .from('tickets')
-      .insert([
-        {
-          ticket_number: ticketNumber,
-          title,
-          description,
-          priority,
-          status: 'open',
-          customer_id,
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert(ticketData)
       .select(`
         *,
         customer:customer_id(email, raw_user_meta_data->name),
@@ -151,12 +138,12 @@ export async function createTicket({ title, description, priority, customer_id }
       `)
       .single();
 
-    if (error) {
-      console.error('Error creating ticket:', error);
-      throw error;
+    if (insertError) {
+      console.error('Error creating ticket:', insertError);
+      throw insertError;
     }
 
-    return data;
+    return insertedTicket;
   } catch (error) {
     console.error('Error in createTicket:', error);
     throw error;

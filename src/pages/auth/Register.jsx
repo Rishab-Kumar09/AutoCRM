@@ -1,39 +1,25 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import styles from './Register.module.css';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { Mail, Lock, User, AlertCircle } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { companyId } = useParams();
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // Get registration context from URL params
-  const queryParams = new URLSearchParams(location.search);
-  const inviteToken = queryParams.get('invite');
-  const role = queryParams.get('role') || 'customer';
-  
   const [formData, setFormData] = useState({
-    email: queryParams.get('email') || '',
+    email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
+    setError(null);
 
+    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
@@ -41,160 +27,109 @@ const Register = () => {
     }
 
     try {
-      // If there's an invite token, verify it first
-      if (inviteToken) {
-        const { data: inviteData, error: inviteError } = await supabase
-          .from('invites')
-          .select('role, company_id, email')
-          .eq('token', inviteToken)
-          .single();
-
-        if (inviteError || !inviteData) {
-          throw new Error('Invalid or expired invitation');
+      const { error: signUpError, data } = await signUp(formData.email, formData.password);
+      
+      if (signUpError) {
+        if (signUpError.message.includes('email confirmation')) {
+          // Ignore email confirmation errors and proceed
+          navigate('/');
+          return;
         }
-
-        if (inviteData.email !== formData.email) {
-          throw new Error('Email does not match invitation');
-        }
-
-        // Use invite data for registration
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              role: inviteData.role,
-              company_id: inviteData.company_id
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-
-        // Delete used invitation
-        await supabase
-          .from('invites')
-          .delete()
-          .eq('token', inviteToken);
-
-        // Redirect based on role
-        if (inviteData.role === 'agent') {
-          navigate('/agent/dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        // Regular customer registration
-        if (!companyId) {
-          throw new Error('Company ID is required for registration');
-        }
-
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              role: 'customer',
-              company_id: companyId
-            }
-          }
-        });
-
-        if (signUpError) throw signUpError;
-        navigate('/dashboard');
+        throw signUpError;
       }
+
+      // User is signed in at this point
+      navigate('/');
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.message || 'Failed to register. Please try again.');
+      setError(err.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>
-            {inviteToken ? 'Accept Invitation' : 'Create an Account'}
-          </h2>
-          <p className={styles.subtitle}>
-            {inviteToken 
-              ? 'Complete your account setup'
-              : 'Get started with customer support'}
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold">Create an account</h1>
+          <p className="text-secondary mt-2">Get started with AutoCRM</p>
         </div>
 
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
+        <div className="card p-6">
+          {error && (
+            <div className="flex items-center gap-2 p-3 mb-4 text-red-600 bg-red-50 rounded-md">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Email Address</label>
-            <input
-              name="email"
-              type="email"
-              required
-              className={styles.input}
-              value={formData.email}
-              onChange={handleChange}
-              disabled={!!inviteToken} // Email is locked for invites
-              placeholder="Enter your email"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="settings-field">
+              <label>Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
+                <input
+                  type="email"
+                  className="input pl-10"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Password</label>
-            <input
-              name="password"
-              type="password"
-              required
-              className={styles.input}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Choose a password"
-              minLength={6}
-            />
-          </div>
+            <div className="settings-field">
+              <label>Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
+                <input
+                  type="password"
+                  className="input pl-10"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  minLength={6}
+                />
+              </div>
+            </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Confirm Password</label>
-            <input
-              name="confirmPassword"
-              type="password"
-              required
-              className={styles.input}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              minLength={6}
-            />
-          </div>
+            <div className="settings-field">
+              <label>Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary w-4 h-4" />
+                <input
+                  type="password"
+                  className="input pl-10"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  minLength={6}
+                />
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isLoading}
-          >
-            {isLoading 
-              ? 'Creating Account...' 
-              : inviteToken 
-                ? 'Accept Invitation'
-                : 'Create Account'}
-          </button>
+            <button
+              type="submit"
+              className="button button-primary w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account...' : 'Create account'}
+            </button>
+          </form>
 
-          <div className={styles.links}>
-            <p>
-              Already have an account?{' '}
-              <Link to="/auth/login" className={styles.link}>
-                Sign in
-              </Link>
-            </p>
+          <div className="mt-4 text-center">
+            <Link to="/auth/login" className="text-primary hover:underline">
+              Already have an account? Sign in
+            </Link>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

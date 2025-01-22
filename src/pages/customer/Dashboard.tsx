@@ -6,16 +6,16 @@ import styles from './Dashboard.module.css';
 const CustomerDashboard: React.FC = () => {
   return (
     <Layout>
-      <div className={styles.dashboardContainer}>
+      <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>Welcome to Support Portal</h1>
           <p className={styles.subtitle}>How can we help you today?</p>
         </div>
         
-        <div className={styles.grid}>
+        <div className={styles.actions}>
           {/* Quick Actions */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Quick Actions</h2>
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Quick Actions</h2>
             <div className="space-y-4">
               <Link 
                 to="/tickets/create"
@@ -33,13 +33,13 @@ const CustomerDashboard: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Recent Activity</h2>
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Recent Activity</h2>
             <div className="space-y-4">
-              <p className={styles.text}>Your recent ticket activity will appear here.</p>
+              <p className={styles.emptyState}>Your recent ticket activity will appear here.</p>
               <Link 
                 to="/tickets"
-                className={styles.linkButton}
+                className={styles.link}
               >
                 View All Activity →
               </Link>
@@ -47,18 +47,18 @@ const CustomerDashboard: React.FC = () => {
           </div>
 
           {/* Help Resources */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Help Resources</h2>
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Help Resources</h2>
             <div className="space-y-4">
               <Link 
                 to="/help/faq"
-                className={styles.linkButton}
+                className={styles.link}
               >
                 Browse FAQ →
               </Link>
               <Link 
                 to="/help/guides"
-                className={styles.linkButton}
+                className={styles.link}
               >
                 View User Guides →
               </Link>
@@ -66,18 +66,18 @@ const CustomerDashboard: React.FC = () => {
           </div>
 
           {/* Account Settings */}
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Account Settings</h2>
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Account Settings</h2>
             <div className="space-y-4">
               <Link 
                 to="/profile"
-                className={styles.linkButton}
+                className={styles.link}
               >
                 Edit Profile →
               </Link>
               <Link 
                 to="/settings"
-                className={styles.linkButton}
+                className={styles.link}
               >
                 Manage Preferences →
               </Link>
